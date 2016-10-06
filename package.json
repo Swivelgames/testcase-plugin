@@ -1,0 +1,12 @@
+{
+  "name": "testcase-plugin",
+  "version": "1.0.0",
+  "description": "Using webpack queries, attempts to locate existence of alternate versions of source files given a `src` path and `testcases` path.",
+  "main": "index.js",
+  "author": "Joseph Dalrymple <me@swivel.in>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Swivelgames/testcase-plugin.git"
+  }
+}
