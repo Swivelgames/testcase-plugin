@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = (function(){
-	function Constructor(src, tcSrc) {
+	function Constructor(src, tcSrc, extensions) {
 		this.src = src;
 		this.tcSrc = tcSrc;
+		this.exts = extensions;
 	}
 
 	Constructor.prototype = {
@@ -21,24 +22,20 @@ module.exports = (function(){
 		testResolve: function(result, callback) {
 			const { src, tcSrc } = this;
 
-			if (!result) return callback();
-			if (!result.request) {
-				console.log(result);
-				return callback();
-			}
+			if (!result || !result.request) return callback();
 
 			const reqPartial = result.request.indexOf('!') > -1 ? result.request.split('!').pop() : result.request;
 			const reqPath = path.resolve(result.context, reqPartial);
 
 			if (reqPath.indexOf(src) === 0) {
-				let newPath = reqPath.replace(new RegExp('^' + src), tcSrc);
+				let newPath = this.testPath(reqPath.replace(src, tcSrc));
 
-				if(this.testPath(newPath)) {
+				if(newPath !== false) {
 					result.request = result.request.replace(reqPartial, newPath);
 				}
 			} else if (reqPath.indexOf(tcSrc) === 0) {
-				if(!this.testPath(reqPath)) {
-					result.request =  reqPath.replace(new RegExp('^' + tcSrc), src);
+				if(this.testPath(reqPath) === false) {
+					result.request = reqPath.replace(tcSrc, src);
 				}
 			} else return callback(null, result);
 
@@ -46,15 +43,19 @@ module.exports = (function(){
 		},
 
 		testPath: function(path) {
-			try {
-				fs.accessSync(path);
-				return !fs.statSync(path).isDirectory();
-			} catch(e) {
-				if(e.code !== 'ENOENT') console.log(e);
-			}
-			return false;
+			const ret = ([''].concat(this.exts)).filter(function (ext) {
+				let _path = path + ext;
+				try {
+					fs.accessSync(_path);
+					return !fs.statSync(_path).isDirectory();
+				} catch(e) {
+					if(e.code !== 'ENOENT') console.log(e);
+				}
+				return false;
+			});
+			return (ret.length === 1) ? path + ret[0] : false;
 		}
 	};
 
 	return Constructor;
-})()
+})();
