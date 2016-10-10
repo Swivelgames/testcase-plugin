@@ -31,15 +31,27 @@ module.exports = (function(){
 				let newPath = this.testPath(reqPath.replace(src, tcSrc));
 
 				if(newPath !== false) {
-					result.request = result.request.replace(reqPartial, newPath);
+					this.rebuildResult(result, newPath);
 				}
-			} else if (reqPath.indexOf(tcSrc) === 0) {
-				if(this.testPath(reqPath) === false) {
-					result.request = reqPath.replace(tcSrc, src);
+			} else if (result.context.indexOf(tcSrc) === 0) {
+				if (this.testPath(reqPath) === false) {
+					result.context = result.context.replace(tcSrc, src);
 				}
-			} else return callback(null, result);
+			}
 
 			return callback(null, result);
+		},
+
+		rebuildResult(result, newPartial) {
+			if (result.request.indexOf('!') > -1) {
+				const splits = result.request.split('!');
+				splits.pop();
+				splits.push(newPartial);
+				result.request = splits.join('!');
+			} else {
+				result.request = newPartial;
+			}
+			return result;
 		},
 
 		testPath: function(path) {
